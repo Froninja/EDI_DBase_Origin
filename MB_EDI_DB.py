@@ -3,11 +3,8 @@ from PurchaseOrder import PurchaseOrder
 
 print('Hello world')
 
-purchase_orders = []
+db = PODatabase()
 
-for num in range(10):
-    purchase_orders.append(PurchaseOrder(num, "Saks"))
-
-db = PODatabase(purchase_orders)
+db.read_db("C:\Users\Jacob\Documents\PO_DB.csv")
 
 db.console_print()
