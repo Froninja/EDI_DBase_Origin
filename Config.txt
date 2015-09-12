@@ -1,0 +1,3 @@
+Saks Fifth Avenue: C:\Users\Jacob\Documents\Saks PO.csv
+Nordstrom: C:\Users\Jacob\Documents\Nordstrom PO.csv
+Bloomingdale's: C:\Users\Jacob\Documents\Bloomingdales PO.csv
