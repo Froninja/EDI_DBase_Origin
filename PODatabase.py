@@ -1,9 +1,10 @@
 from PurchaseOrder import PurchaseOrder
+import shelve
 
 class PODatabase(object):
     """Stores a set of PurchaseOrder objects and represents them to the user"""
     def __init__(self):
-        self.purchase_orders = dict()
+        self.purchase_orders = shelve.open('PO_Data')
         self.export_paths = dict()
         with open("Config.txt") as config:
             for line in config:
@@ -59,12 +60,28 @@ class PODatabase(object):
         with open(export_file, 'r') as export:
             for line in export:
                 line = line.rstrip('\n').rstrip('\r').split(',')
-                if not self.check_export_against_db(line[1]):
-                    PO = PurchaseOrder(line[1], customer)
-                    PO.cancel_ship = line[4]
-                    PO.total_cost = self.get_cost_from_exp(PO.po_number,
-                                                           export_file)
-                    self.purchase_orders[PO.po_number] = PO
+                if line[1] != 'PO #':
+                    if line[1].lstrip('0') not in self.purchase_orders:
+                        PO = PurchaseOrder(line[1].lstrip('0'), customer)
+                        PO.cancel_ship = line[4]
+                        #PO.total_cost = self.get_cost_from_exp(PO.po_number,
+                        #                                       export_file)
+                        PO.get_items_from_export(export_file)
+                        PO.get_stores_from_export(export_file)
+                        for item in PO.items.itervalues():
+                            PO.total_cost += (item.cost * item.total_qty)
+                        self.purchase_orders[PO.po_number] = PO
+                    else:
+                        PO = self.purchase_orders[line[1].lstrip('0')]
+                        PO.cancel_ship = line[4]
+                        #PO.total_cost = self.get_cost_from_exp(PO.po_number,
+                                                               #export_file)
+                        PO.get_items_from_export(export_file)
+                        PO.get_stores_from_export(export_file)
+                        PO.total_cost = 0
+                        for item in PO.items.itervalues():
+                            PO.total_cost += (item.cost * item.total_qty)
+                        self.purchase_orders.sync()
 
     def get_cost_from_exp(self, po_num, export_file):
         """Searches the TLW export for all lines matching the supplied PO
@@ -74,7 +91,6 @@ class PODatabase(object):
             for line in export:
                 #if len(line) > 1:
                 line = line.rstrip('\n').rstrip('\r').split(',')
-                print line
                 if line[1] == po_num:
                     total_cost += float(line[7]) * int(line[9])
         return total_cost
